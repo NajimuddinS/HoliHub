@@ -6,6 +6,7 @@ const connectDB = require("./lib/db.js");
 const dotenv = require('dotenv');
 const UserDetails = require("./model/details.model.js");
 const cloudinary = require("./lib/cloudinary.js");
+const cors = require('cors');
 
 dotenv.config();
 
@@ -16,7 +17,9 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(cors({
+  origin : '*'
+}))
 
 
 // Multer Storage Configuration
