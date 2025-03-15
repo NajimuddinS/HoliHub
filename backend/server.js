@@ -10,13 +10,17 @@ const cors = require('cors');
 
 dotenv.config();
 
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin : '*'
+}))
+
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -32,10 +36,8 @@ const upload = multer({ storage: storage });
 
 // POST: Create Passenger with File Upload
 app.post("/passengers", upload.fields([{ name: "photo" }, { name: "idCard" }]), async (req, res) => {
+  
   try {
-    console.log("Request Body:", req.body); // Log the request body
-    console.log("Request Files:", req.files); // Log the uploaded files
-
     const { fullName, age, gender, contact, email } = req.body;
     const photo = req.files["photo"] ? req.files["photo"][0].path : null;
     const idCard = req.files["idCard"] ? req.files["idCard"][0].path : null;
@@ -49,6 +51,8 @@ app.post("/passengers", upload.fields([{ name: "photo" }, { name: "idCard" }]), 
     const idUrl = idres.url;
     const photoUrl = uploadres.url;
 
+
+    // console.log(photoUrl);
     const newPassenger = await UserDetails.create({
       fullName,
       age,
@@ -61,7 +65,6 @@ app.post("/passengers", upload.fields([{ name: "photo" }, { name: "idCard" }]), 
 
     res.status(201).json({ message: "Passenger added successfully", passenger: newPassenger });
   } catch (error) {
-    console.error("Error in /passengers route:", error); // Log the error
     res.status(500).json({ error: error.message });
   }
 });
@@ -78,6 +81,7 @@ app.get("/passengers", async (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  connectDB();
+    console.log(`Server running on port ${PORT}`)
+    connectDB();
 });
+
