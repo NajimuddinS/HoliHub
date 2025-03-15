@@ -1,33 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 const emptyPassenger = {
-  name: "",
-  age: "",
-  gender: "",
-  contact: "",
-  email: "",
+  name: '',
+  age: '',
+  gender: '',
+  contact: '',
+  email: '',
   photo: null,
-  idCard: null,
+  idCard: null
 };
 
 function App() {
   const [passengers, setPassengers] = useState([]); // State to store all passengers
-  const [currentPassenger, setCurrentPassenger] = useState({
-    ...emptyPassenger,
-  }); // State for the current form data
+  const [currentPassenger, setCurrentPassenger] = useState({ ...emptyPassenger }); // State for the current form data
 
+  // Fetch passengers from the backend on component mount
   useEffect(() => {
-    fetch("https://holihub.onrender.com/passengers")
-      .then((res) => res.json())
-      .then((data) => setPassengers(data))
-      .catch((error) => console.error("Error fetching passengers:", error));
-  }, []);
+    fetchPassengers();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
-  const handleAddPassenger = () => {
-    // Add the current passenger to the passengers list
-    setPassengers([...passengers, currentPassenger]);
-    // Reset the form to empty
-    setCurrentPassenger({ ...emptyPassenger });
+  const fetchPassengers = async () => {
+    try {
+      const response = await fetch('https://holihub.onrender.com/passengers');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setPassengers(data); // Update the passengers state with fetched data
+    } catch (error) {
+      console.error('Error fetching passengers:', error);
+    }
+  };
+
+  const handleAddPassenger = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('name', currentPassenger.name);
+      formData.append('age', currentPassenger.age);
+      formData.append('gender', currentPassenger.gender);
+      formData.append('contact', currentPassenger.contact);
+      formData.append('email', currentPassenger.email);
+      if (currentPassenger.photo) {
+        formData.append('photo', currentPassenger.photo);
+      }
+      if (currentPassenger.idCard) {
+        formData.append('idCard', currentPassenger.idCard);
+      }
+
+      const response = await fetch('https://holihub.onrender.com/passengers', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      console.log('Success:', result);
+      alert('Passenger added successfully!');
+
+      // Fetch the updated list of passengers
+      fetchPassengers();
+
+      // Reset the form
+      setCurrentPassenger({ ...emptyPassenger });
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to add passenger. Please try again.');
+    }
   };
 
   const handleChange = (field, value) => {
@@ -38,46 +79,21 @@ function App() {
     setCurrentPassenger({ ...currentPassenger, [field]: file });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("fullName", currentPassenger.name);
-      formData.append("age", currentPassenger.age);
-      formData.append("gender", currentPassenger.gender);
-      formData.append("contact", currentPassenger.contact);
-      formData.append("email", currentPassenger.email);
-      if (currentPassenger.photo)
-        formData.append("photo", currentPassenger.photo);
-      if (currentPassenger.idCard)
-        formData.append("idCard", currentPassenger.idCard);
-
-      const response = await fetch("https://holihub.onrender.com/passengers", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Network response was not ok");
-
-      const result = await response.json();
-      setPassengers([...passengers, result]); // Update the state with the new passenger
-      setCurrentPassenger({ ...emptyPassenger }); // Reset form
-      alert("Passenger registered successfully!");
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to register passenger.");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
           Passenger Registration Form
         </h1>
-
+        
         {/* Static Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleAddPassenger();
+          }}
+          className="space-y-6"
+        >
           <div className="bg-white shadow rounded-lg p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Passenger</h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -89,7 +105,7 @@ function App() {
                   type="text"
                   required
                   value={currentPassenger.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
+                  onChange={(e) => handleChange('name', e.target.value)}
                   className="mt-1 pt-2 pb-2 pl-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border-2"
                 />
               </div>
@@ -102,7 +118,7 @@ function App() {
                   type="number"
                   required
                   value={currentPassenger.age}
-                  onChange={(e) => handleChange("age", e.target.value)}
+                  onChange={(e) => handleChange('age', e.target.value)}
                   className="mt-1 pt-2 pb-2 pl-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border-2"
                 />
               </div>
@@ -114,7 +130,7 @@ function App() {
                 <select
                   required
                   value={currentPassenger.gender}
-                  onChange={(e) => handleChange("gender", e.target.value)}
+                  onChange={(e) => handleChange('gender', e.target.value)}
                   className="mt-1 pt-2 pb-2 pl-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border-2"
                 >
                   <option value="">Select Gender</option>
@@ -131,7 +147,7 @@ function App() {
                 <input
                   type="text"
                   value={currentPassenger.contact}
-                  onChange={(e) => handleChange("contact", e.target.value)}
+                  onChange={(e) => handleChange('contact', e.target.value)}
                   className="mt-1 pt-2 pb-2 pl-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border-2"
                 />
               </div>
@@ -143,7 +159,7 @@ function App() {
                 <input
                   type="email"
                   value={currentPassenger.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
+                  onChange={(e) => handleChange('email', e.target.value)}
                   className="mt-1 pt-2 pb-2 pl-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border-2"
                 />
               </div>
@@ -154,7 +170,7 @@ function App() {
                 </label>
                 <input
                   type="file"
-                  onChange={(e) => handleFileChange("photo", e.target.files[0])}
+                  onChange={(e) => handleFileChange('photo', e.target.files[0])}
                   className="mt-1 block w-full text-sm text-gray-500
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-md file:border-0
@@ -172,9 +188,7 @@ function App() {
                 <input
                   type="file"
                   accept=".pdf"
-                  onChange={(e) =>
-                    handleFileChange("idCard", e.target.files[0])
-                  }
+                  onChange={(e) => handleFileChange('idCard', e.target.files[0])}
                   className="mt-1 block w-full text-sm text-gray-500
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-md file:border-0
@@ -207,9 +221,7 @@ function App() {
 
         {/* Table to display submitted passengers */}
         <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Submitted Passengers
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Submitted Passengers</h2>
           <table className="min-w-full bg-white border border-gray-300">
             <thead>
               <tr>
@@ -233,23 +245,18 @@ function App() {
                   <td className="py-2 px-4 border-b">
                     {passenger.photo ? (
                       <img
-                        src={
-                          typeof passenger.photo === "string"
-                            ? passenger.photo
-                            : URL.createObjectURL(passenger.photo)
-                        }
-                        alt="Passenger"
-                        className="w-16 h-16 object-cover rounded"
+                        src={passenger.photo} // Use the URL directly from the backend
+                        alt="Passenger Photo"
+                        className="w-16 h-16 object-cover"
                       />
                     ) : (
-                      "No Photo"
+                      'No Photo'
                     )}
                   </td>
-
                   <td className="py-2 px-4 border-b">
                     {passenger.idCard ? (
                       <a
-                        href={URL.createObjectURL(passenger.idCard)}
+                        href={passenger.idCard} // Use the URL directly from the backend
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-indigo-600 hover:underline"
@@ -257,7 +264,7 @@ function App() {
                         View ID Card
                       </a>
                     ) : (
-                      "No ID Card"
+                      'No ID Card'
                     )}
                   </td>
                 </tr>
