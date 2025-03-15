@@ -72,7 +72,7 @@ app.get("/passengers", async (req, res) => {
     const passengers = await UserDetails.find();
     res.status(200).json(passengers);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error });
   }
 });
 
